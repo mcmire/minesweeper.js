@@ -8,6 +8,10 @@ td {
   cursor: pointer;
 }
 
-td:hover {
+td:not(.mine):hover {
   background-color: #ddd;
+}
+
+.mine {
+  background-color: black;
 }
