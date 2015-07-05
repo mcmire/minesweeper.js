@@ -1,0 +1,13 @@
+#board {
+  width: 400px;
+  height: 400px;
+}
+
+td {
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+td:hover {
+  background-color: #ddd;
+}
