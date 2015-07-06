@@ -32,6 +32,13 @@ function encounterCell(cell) {
 
       if (numberOfAdjacentMines > 0) {
         cell.append(numberOfAdjacentMines);
+      } else {
+        // Reveal adjacent cells that aren't mines, recursively
+        for (var k = 0; k < adjacentCells.length; k++) {
+          if (adjacentCells[k].length && !adjacentCells[k].data('isMine')) {
+            encounterCell(adjacentCells[k]);
+          }
+        }
       }
     }
   }
