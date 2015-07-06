@@ -1,3 +1,7 @@
+body {
+  font-size: 20px;
+}
+
 #board {
   width: 400px;
   height: 400px;
@@ -6,12 +10,19 @@
 td {
   border: 1px solid black;
   cursor: pointer;
+  width: 11.11111111%;
+  height: 11.11111111%;
+  text-align: center;
 }
 
-td:not(.mine):hover {
+td:not(.revealed):hover {
   background-color: #ddd;
 }
 
-.mine {
+.revealed.mine {
   background-color: black;
+}
+
+.revealed:not(.mine) {
+  background-color: silver;
 }
