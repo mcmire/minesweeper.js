@@ -6,6 +6,7 @@
     var numberOfMines = args.numberOfMines;
 
     var mineLocations = [];
+    var cells = [];
 
     var getTotalNumberOfCells = function () {
       return (lengthInCells * lengthInCells);
@@ -33,7 +34,8 @@
 
         for (var x = 0; x < lengthInCells; x++) {
           var cell = generateCell(x, y);
-          row.append(cell);
+          row.append(cell.element);
+          addCell(cell, x, y);
         }
 
         element.append(row);
@@ -46,27 +48,30 @@
     };
 
     var generateCell = function (x, y) {
-      var cell = $('<td>');
+      return new Cell({
+        board: board,
+        x: x,
+        y: y,
+        isMine: isMineLocatedAt(x, y)
+      });
+    };
 
-      cell.data('x', x);
-      cell.data('y', y);
-      cell.addClass('x-' + x);
-      cell.addClass('y-' + y);
+    var findCell = function (x, y) {
+      if (x in cells && y in cells[x]) {
+        return cells[x][y];
+      }
+    };
 
-      if (isMineLocatedAt(x, y)) {
-        cell.addClass('mine');
-        cell.data('isMine', true);
+    var addCell = function (cell, x, y) {
+      if (!(x in cells)) {
+        cells[x] = [];
       }
 
-      cell.on('click', function (event) {
-        encounterCell($(event.target));
-      });
-
-      return cell;
+      cells[x][y] = cell;
     };
 
     var encounterCell = function (cell) {
-      if (cell.data('isMine')) {
+      if (cell.isMine) {
         revealAllCells();
       } else {
         recursivelyEncounterBlank(cell);
@@ -74,75 +79,48 @@
     };
 
     var revealAllCells = function () {
-      for (var y = 0; y < lengthInCells; y++) {
-        for (var x = 0; x < lengthInCells; x++) {
-          var cell = $('td.x-' + x + '.y-' + y);
-          revealCell(cell);
-        }
-      }
-    };
-
-    var revealCell = function (cell) {
-      if (cell.hasClass('revealed')) {
-        return false;
-      } else {
-        var numberOfAdjacentMines = getNumberOfMinesAdjacentTo(cell);
-
-        if (numberOfAdjacentMines > 0) {
-          cell.append("<div>" + numberOfAdjacentMines + "</div>");
-        }
-
-        cell.addClass('revealed');
-
-        return true;
-      }
+      cells.forEach(function (row) {
+        row.forEach(function (cell) {
+          cell.reveal();
+        });
+      });
     };
 
     var recursivelyEncounterBlank = function (cell) {
-      if (revealCell(cell) && getNumberOfMinesAdjacentTo(cell) === 0) {
-        recursivelyEncounterBlanksIn(findCellsAdjacentTo(cell));
+      if (cell.reveal() && cell.getNumberOfAdjacentMines() === 0) {
+        recursivelyEncounterBlanksIn(cell.getAdjacentCells());
       }
     };
 
     var recursivelyEncounterBlanksIn = function (cells) {
-      cells.forEach(function (cell) {
-        if (!cell.data('isMine')) {
-          recursivelyEncounterBlank(cell);
-        }
+      var blanks = cells.filter(function (cell) {
+        return !cell.isMine;
+      });
+
+      blanks.forEach(function (blank) {
+        recursivelyEncounterBlank(blank);
       });
     };
 
-    var getNumberOfMinesAdjacentTo = function (cell) {
-      return countMinesInArea(findCellsAdjacentTo(cell));
-    };
-
     var findCellsAdjacentTo = function (cell) {
-      var x = cell.data('x');
-      var y = cell.data('y');
-      var cells = [
-        $('td.x-' + (x - 1) + '.y-' + (y - 1)),
-        $('td.x-' + x + '.y-' + (y - 1)),
-        $('td.x-' + (x + 1) + '.y-' + (y - 1)),
-        $('td.x-' + (x - 1) + '.y-' + y),
-        $('td.x-' + (x + 1) + '.y-' + y),
-        $('td.x-' + (x - 1) + '.y-' + (y + 1)),
-        $('td.x-' + x + '.y-' + (y + 1)),
-        $('td.x-' + (x + 1) + '.y-' + (y + 1))
+      var x = cell.x, y = cell.y;
+      var adjacentCells = [
+        findCell(x - 1, y - 1),
+        findCell(x, y - 1),
+        findCell(x + 1, y - 1),
+        findCell(x - 1, y),
+        findCell(x + 1, y),
+        findCell(x - 1, y + 1),
+        findCell(x, y + 1),
+        findCell(x + 1, y + 1)
       ];
 
-      return cells.filter(function (cell) { return cell.length > 0; });
+      return adjacentCells.filter(function (cell) { return cell; });
     };
 
     var countMinesInArea = function (cells) {
-      var count = 0;
-
-      for (var i = 0; i < cells.length; i++) {
-        if (cells[i].data('isMine')) {
-          count++;
-        }
-      }
-
-      return count;
+      var mines = cells.filter(function (cell) { return cell.isMine; });
+      return mines.length;
     };
 
     var isMineLocatedAt = function (x, y) {
@@ -150,6 +128,63 @@
     };
 
     this.generate = generate;
+    this.encounterCell = encounterCell;
+    this.findCellsAdjacentTo = findCellsAdjacentTo;
+    this.countMinesInArea = countMinesInArea;
+  }
+
+  function Cell(args) {
+    var _this = this;
+    var board = args.board;
+    var x = args.x;
+    var y = args.y;
+    var isMine = args.isMine;
+    var hasBeenRevealed = false;
+
+    var element = $('<td>');
+
+    if (isMine) {
+      element.addClass('mine');
+    }
+
+    var reveal = function () {
+      if (hasBeenRevealed) {
+        return false;
+      } else {
+        revealNumberOfAdjacentMines();
+        element.addClass('revealed');
+        hasBeenRevealed = true;
+        return true;
+      }
+    };
+
+    var getAdjacentCells = function () {
+      return board.findCellsAdjacentTo(_this);
+    };
+
+    var getNumberOfAdjacentMines = function () {
+      return board.countMinesInArea(getAdjacentCells());
+    };
+
+    var revealNumberOfAdjacentMines = function () {
+      var number = getNumberOfAdjacentMines();
+
+      if (number > 0) {
+        element.append('<div>' + number + '</div>');
+      }
+    };
+
+    this.element = element;
+    this.x = x;
+    this.y = y;
+    this.isMine = isMine;
+    this.reveal = reveal;
+    this.getAdjacentCells = getAdjacentCells;
+    this.getNumberOfAdjacentMines = getNumberOfAdjacentMines;
+
+    element.on('click', function (event) {
+      board.encounterCell(_this);
+    });
   }
 
   var board = new Board({
