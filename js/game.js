@@ -30,7 +30,7 @@
 
     var generateCells = function () {
       for (var y = 0; y < lengthInCells; y++) {
-        var row = $('<tr>');
+        var row = $('<div class="row">');
 
         for (var x = 0; x < lengthInCells; x++) {
           var cell = generateCell(x, y);
@@ -73,6 +73,7 @@
     var encounterCell = function (cell) {
       if (cell.isMine) {
         revealAllCells();
+        $(document.body).addClass('game-over');
       } else {
         recursivelyEncounterBlank(cell);
       }
@@ -141,7 +142,8 @@
     var isMine = args.isMine;
     var hasBeenRevealed = false;
 
-    var element = $('<td>');
+    var element = $('<div class="cell">');
+    var content = $('<div>').appendTo(element);
 
     if (isMine) {
       element.addClass('mine');
@@ -151,7 +153,11 @@
       if (hasBeenRevealed) {
         return false;
       } else {
-        revealNumberOfAdjacentMines();
+        if (isMine) {
+          revealMine();
+        } else {
+          revealNumberOfAdjacentMines();
+        }
         element.addClass('revealed');
         hasBeenRevealed = true;
         return true;
@@ -166,11 +172,19 @@
       return board.countMinesInArea(getAdjacentCells());
     };
 
+    var revealMine = function () {
+      content.append('<i class="fa fa-bomb"></i>');
+    };
+
     var revealNumberOfAdjacentMines = function () {
       var number = getNumberOfAdjacentMines();
 
       if (number > 0) {
-        element.append('<div>' + number + '</div>');
+        element.addClass('near-' + number);
+
+        if (!isMine) {
+          content.append('<div>' + number + '</div>');
+        }
       }
     };
 
