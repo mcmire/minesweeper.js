@@ -3,64 +3,53 @@
 
   function BoardView(args) {
     var view = this;
-    var cellViewCollection = args.cellViewCollection;
+    //var rowViewCollection = args.rowViewCollection;
     var element = args.element;
     var model = args.model;
     var size = args.size;
 
     var activate = function () {
-      cellViewCollection.forEach(function (cellView) {
-        cellView.activate();
+      rowViewCollection.forEach(function (rowView) {
+        rowView.activate();
       });
     };
 
     var render = function () {
       element.innerHTML = "";
-
-      //cellViewCollection.forEachRow(function (row) {
-        //var tr = document.createElement("tr");
-
-        //row.forEach(function (cellView) {
-          //cellView.appendTo(tr);
-          //cellView.render();
-        //});
-
-        //element.appendChild(tr);
-      //});
-
       rowViewCollection.appendTo(element);
       rowViewCollection.render();
-
-      rowViewCollection.forEach(function (row) {
-        row.forEach(function (rowView) {
-          rowView.appendTo(element);
-          rowView.render();
-        });
-      });
     };
 
     var endGame = function () {
       view.render();
 
-      cellViewCollection.forEach(function (cellView) {
-        cellView.deactivate();
+      rowViewCollection.forEach(function (rowView) {
+        rowView.deactivate();
       });
     };
 
-    var createCellElement = function () {
-      var element = document.createElement("div");
-      element.classList.add("cell");
-      return element;
-    };
+    //var createCellElement = function () {
+      //var element = document.createElement("div");
+      //element.classList.add("cell");
+      //return element;
+    //};
 
-    model.cells.forEach(function (cell) {
-      cellViewCollection.addView({
-        parentView: view,
-        element: createCellElement(),
-        model: cell,
-        size: size
-      });
+    var rowViewCollection = new ViewCollection({
+      models: model.cells,
+      viewClass: minesweeper.RowView,
+      buildElement: function () {
+        return document.createElement("tr");
+      }
     });
+
+    //model.cells.forEach(function (cell) {
+      //rowViewCollection.addView({
+        //parentView: view,
+        //element: createCellElement(),
+        //model: cell,
+        //size: size
+      //});
+    //});
 
     this.size = size;
     this.activate = activate;

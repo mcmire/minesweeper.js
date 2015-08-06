@@ -26,12 +26,10 @@ describe("minesweeper.ViewCollection", function () {
 
   describe("constructor", function () {
     it("builds a new view for each model pointing to the parent view", function () {
-      var element = createElement();
       var models = [buildModel(), buildModel()];
       var View = function (args) { return args; };
       var elements = [createElement(), createElement()];
       var viewCollection = new minesweeper.ViewCollection({
-        element: element,
         models: models,
         viewClass: View,
         buildElement: (function () {

@@ -1,6 +1,5 @@
 (function (exports) {
   function ViewCollection(args) {
-    var element = args.element;
     var models = args.models;
     var viewClass = args.viewClass;
     var buildElement = args.buildElement;
